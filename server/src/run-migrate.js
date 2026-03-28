@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import './loadEnv.js';
 import { migrate } from './db/migrate.js';
 
 migrate().then(() => {

@@ -3,6 +3,7 @@
  * Serves: REST API + Socket.IO + static React app from client/dist (run `pnpm run build:client` first).
  *
  * server/.env:
+ *   SESSION_SECRET      — required (long random string). PM2 fails fast if missing.
  *   PORT=3001           — only port to open on the firewall
  *   FRONTEND_ORIGIN     — optional; comma-separated if you want a strict allowlist.
  *                         If unset, CORS/Socket.IO reflect the browser Origin (typical single-host PM2).
@@ -18,6 +19,20 @@ const envFromFile = fs.existsSync(envPath)
   ? dotenv.parse(fs.readFileSync(envPath, 'utf8'))
   : {};
 
+const env = {
+  ...envFromFile,
+  NODE_ENV: 'production',
+};
+
+const sessionSecret = String(env.SESSION_SECRET || process.env.SESSION_SECRET || '').trim();
+if (!sessionSecret) {
+  console.error(
+    '[ecosystem.config.cjs] SESSION_SECRET is missing. Set it in server/.env (see server/.env.example), e.g. a long random string, then run: pm2 restart home-work --update-env'
+  );
+  process.exit(1);
+}
+env.SESSION_SECRET = sessionSecret;
+
 module.exports = {
   apps: [
     {
@@ -29,10 +44,7 @@ module.exports = {
       autorestart: true,
       watch: false,
       max_memory_restart: '500M',
-      env: {
-        ...envFromFile,
-        NODE_ENV: 'production',
-      },
+      env,
     },
   ],
 };

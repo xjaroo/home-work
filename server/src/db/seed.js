@@ -1,4 +1,4 @@
-import 'dotenv/config';
+import '../loadEnv.js';
 import { v4 as uuidv4 } from 'uuid';
 import { hashSync } from '../lib/bcrypt.js';
 import { migrate } from './migrate.js';

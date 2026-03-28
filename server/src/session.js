@@ -17,7 +17,9 @@ const sessionConfig = {
 };
 
 if (!sessionConfig.secret) {
-  throw new Error('SESSION_SECRET must be set in environment');
+  throw new Error(
+    'SESSION_SECRET must be set (e.g. in server/.env — see server/.env.example)'
+  );
 }
 
 export const sessionStore = new session.MemoryStore();
