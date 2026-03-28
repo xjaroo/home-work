@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import {
   fetchAdminUsers,
@@ -7,6 +8,7 @@ import {
   deactivateAdminUser,
   reactivateAdminUser,
   permanentlyDeleteAdminUser,
+  impersonateAdminAsKid,
 } from '../../api/admin.js';
 
 function statusLabel(row) {
@@ -44,6 +46,7 @@ function groupUsersByFamily(userRows) {
 }
 
 export default function AdminUsersPage() {
+  const navigate = useNavigate();
   const { user: currentUser, refreshUser } = useAuth();
   const [rows, setRows] = useState([]);
   const [families, setFamilies] = useState([]);
@@ -57,6 +60,7 @@ export default function AdminUsersPage() {
   const [newPassword, setNewPassword] = useState('');
   const [formError, setFormError] = useState('');
   const [saving, setSaving] = useState(false);
+  const [openingKidTest, setOpeningKidTest] = useState(false);
   const [loading, setLoading] = useState(true);
 
   const selected = rows.find((r) => r.id === selectedId) || null;
@@ -160,6 +164,21 @@ export default function AdminUsersPage() {
       await reload();
     } catch (err) {
       setFormError(err.message || 'Reactivate failed');
+    }
+  }
+
+  async function handleOpenAsKidForTesting() {
+    if (!selected || selected.role !== 'kid' || selected.deleted_at) return;
+    setFormError('');
+    setOpeningKidTest(true);
+    try {
+      await impersonateAdminAsKid(selected.id);
+      await refreshUser();
+      navigate('/kid');
+    } catch (err) {
+      setFormError(err.message || 'Could not open kid account');
+    } finally {
+      setOpeningKidTest(false);
     }
   }
 
@@ -417,6 +436,22 @@ export default function AdminUsersPage() {
               <button type="submit" disabled={saving} className="btn-app-primary w-full">
                 {saving ? 'Saving…' : 'Save changes'}
               </button>
+              {selected.role === 'kid' && !selected.deleted_at ? (
+                <div className="rounded-app border border-amber-200 bg-amber-50/90 px-3 py-2.5 space-y-2">
+                  <p className="text-xs text-amber-900 leading-snug">
+                    Sign in as this kid in a new session layer: you will see the kid app. Use “Return to admin” on
+                    the kid home screen when finished.
+                  </p>
+                  <button
+                    type="button"
+                    disabled={saving || openingKidTest}
+                    className="btn-app w-full border border-amber-300 text-amber-950 bg-white hover:bg-amber-100/80"
+                    onClick={handleOpenAsKidForTesting}
+                  >
+                    {openingKidTest ? 'Opening…' : 'Open kid app (testing)'}
+                  </button>
+                </div>
+              ) : null}
               {selected.deleted_at ? (
                 <>
                   <button

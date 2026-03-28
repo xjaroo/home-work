@@ -6,16 +6,19 @@ const AuthContext = createContext(null);
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [family, setFamily] = useState(null);
+  const [impersonatedBy, setImpersonatedBy] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const loadUser = useCallback(async () => {
     try {
-      const { user: u, family: f } = await apiGet('/auth/me');
+      const { user: u, family: f, impersonatedBy: imp } = await apiGet('/auth/me');
       setUser(u);
       setFamily(f || null);
+      setImpersonatedBy(imp || null);
     } catch {
       setUser(null);
       setFamily(null);
+      setImpersonatedBy(null);
     } finally {
       setLoading(false);
     }
@@ -29,6 +32,7 @@ export function AuthProvider({ children }) {
     const { user: u, family: f } = await apiPost('/auth/login', { email, password });
     setUser(u);
     setFamily(f || null);
+    setImpersonatedBy(null);
     return u;
   }, []);
 
@@ -36,6 +40,7 @@ export function AuthProvider({ children }) {
     const { user: u, family: f } = await apiPost('/auth/register', { name, email, password });
     setUser(u);
     setFamily(f || null);
+    setImpersonatedBy(null);
     return u;
   }, []);
 
@@ -43,15 +48,26 @@ export function AuthProvider({ children }) {
     await apiPost('/auth/logout');
     setUser(null);
     setFamily(null);
+    setImpersonatedBy(null);
+  }, []);
+
+  const stopImpersonation = useCallback(async () => {
+    const { user: u, family: f } = await apiPost('/auth/stop-impersonation');
+    setUser(u);
+    setFamily(f || null);
+    setImpersonatedBy(null);
+    return u;
   }, []);
 
   const value = {
     user,
     family,
+    impersonatedBy,
     loading,
     login,
     register,
     logout,
+    stopImpersonation,
     refreshUser: loadUser,
     isParent: user?.role === 'parent',
     isKid: user?.role === 'kid',

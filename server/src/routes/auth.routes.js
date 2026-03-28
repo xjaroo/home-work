@@ -96,7 +96,34 @@ router.post('/logout', (req, res) => {
 
 router.get('/me', requireAuth, (req, res) => {
   const family = families.getById(req.user.family_id);
-  res.json({ user: req.user, family: family || null });
+  let impersonatedBy = null;
+  const impId = req.session.impersonatorUserId;
+  if (impId) {
+    const adminUser = users.getById(impId);
+    if (adminUser) {
+      impersonatedBy = { id: adminUser.id, name: adminUser.name, email: adminUser.email };
+    }
+  }
+  res.json({ user: req.user, family: family || null, impersonatedBy });
+});
+
+router.post('/stop-impersonation', requireAuth, (req, res) => {
+  const impId = req.session.impersonatorUserId;
+  if (!impId) {
+    return res.status(400).json({ error: 'Not testing as another account' });
+  }
+  const adminUser = users.getById(impId);
+  if (!adminUser) {
+    req.session.destroy(() => {
+      res.clearCookie('connect.sid');
+      res.status(401).json({ error: 'Admin session is no longer valid' });
+    });
+    return;
+  }
+  req.session.userId = impId;
+  delete req.session.impersonatorUserId;
+  const family = families.getById(adminUser.family_id);
+  res.json({ user: adminUser, family: family || null });
 });
 
 const updateProfileSchema = z.object({

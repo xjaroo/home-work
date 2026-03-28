@@ -18,6 +18,23 @@ export function getUserRecord(userId) {
   return users.getByIdAny(userId);
 }
 
+/** Active kid only (getById excludes soft-deleted). */
+export function getKidForImpersonation(kidUserId) {
+  const kid = users.getById(kidUserId);
+  if (!kid) {
+    const err = new Error('User not found or deactivated');
+    err.status = 404;
+    throw err;
+  }
+  if (kid.role !== 'kid') {
+    const err = new Error('Only kid accounts can be opened for testing');
+    err.status = 400;
+    throw err;
+  }
+  const family = families.getById(kid.family_id);
+  return { user: kid, family: family || null };
+}
+
 /**
  * @param {string} actorId - authenticated admin user id
  * @param {string} targetId

@@ -52,6 +52,26 @@ router.get('/users/:userId', validate(z.object({ userId: uuidSchema })), (req, r
   res.json(row);
 });
 
+router.post(
+  '/users/:userId/impersonate-as-kid',
+  validate(z.object({ userId: uuidSchema })),
+  (req, res, next) => {
+    try {
+      if (req.session.impersonatorUserId) {
+        return res.status(400).json({
+          error: 'Already testing as another account. Return to your admin session first.',
+        });
+      }
+      const { user, family } = adminService.getKidForImpersonation(req.valid.userId);
+      req.session.impersonatorUserId = req.user.id;
+      req.session.userId = user.id;
+      res.json({ user, family });
+    } catch (e) {
+      next(e);
+    }
+  }
+);
+
 router.patch(
   '/users/:userId',
   validate(patchUserSchema),

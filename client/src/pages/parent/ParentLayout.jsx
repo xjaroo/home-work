@@ -43,8 +43,11 @@ export default function ParentLayout() {
     <div
       className={[
         'min-h-screen bg-gray-50 flex flex-col min-w-0 overflow-x-hidden',
+        isMessages ? 'h-dvh max-h-dvh overflow-hidden' : '',
         showMobileBottomNav ? 'pb-[calc(3.75rem+env(safe-area-inset-bottom))] md:pb-0' : '',
-      ].join(' ')}
+      ]
+        .filter(Boolean)
+        .join(' ')}
     >
       <header className="bg-white border-b border-gray-200 px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] py-3 flex justify-between items-center gap-2 flex-wrap sm:flex-nowrap">
         <Link
@@ -248,7 +251,7 @@ export default function ParentLayout() {
       <main
         className={
           isMessages
-            ? 'flex-1 flex flex-col min-h-0 min-w-0 p-0'
+            ? 'flex-1 flex flex-col min-h-0 min-w-0 overflow-hidden p-0'
             : 'p-4 sm:p-5 flex-1 min-w-0'
         }
       >

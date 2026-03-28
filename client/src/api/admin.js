@@ -23,3 +23,8 @@ export function reactivateAdminUser(userId) {
 export function permanentlyDeleteAdminUser(userId) {
   return apiDelete(`/admin/users/${userId}`);
 }
+
+/** Admin only: switch session to the given kid user for testing (sets impersonation). */
+export function impersonateAdminAsKid(userId) {
+  return apiPost(`/admin/users/${userId}/impersonate-as-kid`);
+}
