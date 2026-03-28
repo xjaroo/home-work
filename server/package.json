@@ -1,0 +1,30 @@
+{
+  "name": "home-work-server",
+  "version": "1.0.0",
+  "description": "Family homework & allowance API",
+  "main": "src/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "NODE_PATH=./node_modules node src/server.js",
+    "dev": "NODE_PATH=./node_modules node src/run-migrate.js && NODE_PATH=./node_modules nodemon src/server.js",
+    "migrate": "NODE_PATH=./node_modules node src/run-migrate.js",
+    "seed": "NODE_PATH=./node_modules node src/db/seed.js"
+  },
+  "dependencies": {
+    "sql.js": "^1.14.0",
+    "cookie": "^0.7.2",
+    "cookie-signature": "^1.2.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1",
+    "express-rate-limit": "^7.4.1",
+    "express-session": "^1.18.1",
+    "helmet": "^8.0.0",
+    "socket.io": "^4.8.1",
+    "uuid": "^10.0.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.7"
+  }
+}

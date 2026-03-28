@@ -1,0 +1,46 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Environment (secrets; keep tracked examples)
+.env
+.env.*
+!.env.example
+!server/.env.example
+
+# Build output
+client/dist/
+server/dist/
+
+# Database & local data (paths + common SQLite names)
+server/data/
+*.db
+*.db-wal
+*.db-shm
+*.sqlite
+*.sqlite3
+
+# Logs & debug
+*.log
+pnpm-debug.log*
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor / IDE (optional — remove if you commit shared settings)
+.idea/
+*.swp
+*.swo
+*~
+
+# Test / coverage (if added later)
+coverage/
+.nyc_output/
+
+# TypeScript / tooling cache (if added later)
+*.tsbuildinfo
+.cache/

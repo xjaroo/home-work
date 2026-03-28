@@ -1,0 +1,16 @@
+{
+  "name": "home-work",
+  "private": true,
+  "scripts": {
+    "dev": "pnpm exec concurrently -n server,client -c blue,green \"pnpm run dev:server\" \"pnpm run dev:client\"",
+    "dev:server": "pnpm --filter home-work-server dev",
+    "dev:client": "pnpm --filter home-work-client dev",
+    "build:client": "pnpm --filter home-work-client build",
+    "start": "pnpm --filter home-work-server start",
+    "migrate": "pnpm --filter home-work-server migrate",
+    "seed": "pnpm --filter home-work-server seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.0"
+  }
+}
