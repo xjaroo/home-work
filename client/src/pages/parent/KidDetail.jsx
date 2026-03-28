@@ -10,6 +10,13 @@ import { getTxDescription } from '../../utils/money.js';
 const TASKS_PAGE_SIZE = 10;
 const TX_PAGE_SIZE = 15;
 
+const PARENT_EDITABLE_TASK_STATUSES = [
+  { value: 'todo', label: 'To do' },
+  { value: 'in_progress', label: 'In progress' },
+  { value: 'done', label: 'Done' },
+  { value: 'approved', label: 'Approved' },
+];
+
 export default function KidDetail() {
   const { kidId } = useParams();
   const navigate = useNavigate();
@@ -36,8 +43,11 @@ export default function KidDetail() {
   const [editTaskTitle, setEditTaskTitle] = useState('');
   const [editTaskDescription, setEditTaskDescription] = useState('');
   const [editTaskDueDate, setEditTaskDueDate] = useState('');
+  const [editTaskStatus, setEditTaskStatus] = useState('todo');
+  const [editTaskInitialStatus, setEditTaskInitialStatus] = useState('todo');
   const [savingTask, setSavingTask] = useState(false);
   const [deletingTaskId, setDeletingTaskId] = useState(null);
+  const [updatingStatusTaskId, setUpdatingStatusTaskId] = useState(null);
   const [txSearch, setTxSearch] = useState('');
   const [txPage, setTxPage] = useState(1);
   const [removingTxId, setRemovingTxId] = useState(null);
@@ -190,8 +200,16 @@ export default function KidDetail() {
   }
 
   async function handleStatusChange(taskId, status) {
-    await updateTaskStatus(taskId, status);
-    setTasks(await listTasks({ kidId }));
+    setUpdatingStatusTaskId(taskId);
+    try {
+      await updateTaskStatus(taskId, status);
+      setTasks(await listTasks({ kidId }));
+    } catch (err) {
+      console.error(err);
+      alert(err.message || 'Failed to update status');
+    } finally {
+      setUpdatingStatusTaskId(null);
+    }
   }
 
   async function handleArchive(taskId) {
@@ -204,6 +222,9 @@ export default function KidDetail() {
     setEditTaskTitle(t.title);
     setEditTaskDescription(t.description ?? '');
     setEditTaskDueDate(t.due_date ?? '');
+    const st = t.status === 'approved' || t.status === 'done' || t.status === 'in_progress' || t.status === 'todo' ? t.status : 'todo';
+    setEditTaskStatus(st);
+    setEditTaskInitialStatus(st);
   }
 
   function handleCancelEditTask() {
@@ -220,6 +241,9 @@ export default function KidDetail() {
         description: editTaskDescription.trim() || undefined,
         dueDate: editTaskDueDate,
       });
+      if (editTaskStatus !== editTaskInitialStatus) {
+        await updateTaskStatus(editingTaskId, editTaskStatus);
+      }
       setEditingTaskId(null);
       setTasks(await listTasks({ kidId }));
     } catch (err) {
@@ -392,20 +416,46 @@ export default function KidDetail() {
                       <span className="text-gray-700 text-sm">Due date</span>
                       <input type="date" value={editTaskDueDate} onChange={(e) => setEditTaskDueDate(e.target.value)} required className="mt-1 block w-full rounded border border-gray-300 px-2 py-1.5 text-gray-900 text-sm" />
                     </label>
+                    <label className="block">
+                      <span className="text-gray-700 text-sm">Status</span>
+                      <select
+                        value={editTaskStatus}
+                        onChange={(e) => setEditTaskStatus(e.target.value)}
+                        className="mt-1 block w-full rounded border border-gray-300 px-2 py-1.5 text-gray-900 text-sm"
+                      >
+                        {PARENT_EDITABLE_TASK_STATUSES.map((opt) => (
+                          <option key={opt.value} value={opt.value}>{opt.label}</option>
+                        ))}
+                      </select>
+                    </label>
                     <div className="flex gap-2">
                       <button type="submit" disabled={savingTask} className="rounded bg-indigo-600 px-2 py-1 text-white text-sm disabled:opacity-50">{savingTask ? 'Saving…' : 'Save'}</button>
                       <button type="button" onClick={handleCancelEditTask} className="rounded border border-gray-300 px-2 py-1 text-gray-700 text-sm">Cancel</button>
                     </div>
                   </form>
                 ) : (
-                  <div className="flex justify-between items-center flex-wrap gap-2">
-                    <div>
+                  <div className="flex justify-between items-start flex-wrap gap-2">
+                    <div className="min-w-0 flex-1">
                       <span className="font-medium">{t.title}</span>
-                      <span className="ml-2 text-sm text-gray-500">{t.status}</span>
                       <span className="ml-2 text-sm text-gray-500">Due: {t.due_date}</span>
                       {t.createdByParentName && <span className="ml-2 text-sm text-gray-400">By {t.createdByParentName}</span>}
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap items-center gap-2 shrink-0">
+                      <label className="flex items-center gap-1.5 text-sm text-gray-600">
+                        <span className="whitespace-nowrap">Status</span>
+                        <select
+                          value={PARENT_EDITABLE_TASK_STATUSES.some((o) => o.value === t.status) ? t.status : 'todo'}
+                          onChange={(e) => handleStatusChange(t.id, e.target.value)}
+                          disabled={updatingStatusTaskId === t.id}
+                          className="rounded border border-gray-300 px-2 py-1.5 text-gray-900 text-sm min-w-[9rem] disabled:opacity-50"
+                          aria-label={`Status for ${t.title}`}
+                        >
+                          {PARENT_EDITABLE_TASK_STATUSES.map((opt) => (
+                            <option key={opt.value} value={opt.value}>{opt.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                    <div className="flex flex-wrap gap-2">
                       <button type="button" onClick={() => handleStartEditTask(t)} className="rounded border border-gray-300 px-2 py-1 text-gray-700 text-sm hover:bg-gray-50">Edit</button>
                       <button type="button" onClick={() => handleDeleteTask(t)} disabled={deletingTaskId === t.id} className="rounded border border-red-300 px-2 py-1 text-red-600 text-sm hover:bg-red-50 disabled:opacity-50">{deletingTaskId === t.id ? 'Deleting…' : 'Delete'}</button>
                       {t.status === 'done' && (
@@ -417,6 +467,7 @@ export default function KidDetail() {
                       {t.status === 'approved' && (
                         <button type="button" onClick={() => handleArchive(t.id)} className="rounded bg-gray-500 px-2 py-1 text-white text-sm">Archive</button>
                       )}
+                    </div>
                     </div>
                   </div>
                 )}

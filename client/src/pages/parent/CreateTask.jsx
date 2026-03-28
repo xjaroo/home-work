@@ -3,6 +3,14 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { listKids } from '../../api/kids.js';
 import { createTask } from '../../api/tasks.js';
 
+function localDateYmd() {
+  const d = new Date();
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 export default function CreateTask() {
   const [searchParams] = useSearchParams();
   const defaultKidId = searchParams.get('kidId') || '';
@@ -10,7 +18,7 @@ export default function CreateTask() {
   const [kidId, setKidId] = useState(defaultKidId);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(() => localDateYmd());
   const [error, setError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const navigate = useNavigate();
