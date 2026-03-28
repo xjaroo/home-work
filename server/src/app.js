@@ -5,7 +5,7 @@ import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
-import { errorHandler } from './middleware/errorHandler.js';
+import { productionCorsOrigin } from './lib/productionCors.js';
 import { sessionMiddleware } from './session.js';
 import authRoutes from './routes/auth.routes.js';
 import familiesRoutes from './routes/families.routes.js';
@@ -29,9 +29,7 @@ app.use(helmet({
 }));
 
 app.use(cors({
-  origin: isProduction
-    ? (process.env.FRONTEND_ORIGIN || 'http://localhost:5173').split(',').map((s) => s.trim())
-    : true,
+  origin: isProduction ? productionCorsOrigin() : true,
   credentials: true,
 }));
 
@@ -79,10 +77,7 @@ if (isProduction) {
   });
 }
 
-app.use((_req, _res, next) => {
-  next(Object.assign(new Error('Not found'), { status: 404 }));
-});
-
-app.use(errorHandler);
+// 404 + errorHandler are registered in server.js after Vite middleware (dev).
 
 export default app;
+export { errorHandler } from './middleware/errorHandler.js';

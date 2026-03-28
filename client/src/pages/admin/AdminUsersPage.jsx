@@ -200,21 +200,81 @@ export default function AdminUsersPage() {
   return (
     <div className="flex flex-col lg:flex-row gap-4 lg:gap-6 min-w-0">
       <div className="card-app flex-1 min-w-0 overflow-hidden">
-        <div className="px-4 py-3 border-b border-gray-200">
-          <h1 className="text-lg font-semibold text-gray-900">All users</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+        <div className="px-4 py-3 sm:py-3.5 border-b border-gray-200">
+          <h1 className="text-lg sm:text-xl font-semibold text-gray-900 leading-tight">All users</h1>
+          <p className="text-sm text-gray-500 mt-1 leading-snug">
             {rows.length} accounts · {familyGroups.length}{' '}
             {familyGroups.length === 1 ? 'family' : 'families'}
           </p>
+          <p className="text-xs text-gray-400 mt-1.5 md:hidden">Tap a row to edit below.</p>
         </div>
-        <div className="overflow-x-auto max-h-[min(70vh,32rem)] lg:max-h-none">
-          <table className="w-full text-sm text-left">
+        <div className="md:hidden overflow-y-auto max-h-[min(52vh,28rem)] overscroll-y-contain border-t border-gray-100">
+          {familyGroups.map((group, gIdx) => (
+            <section
+              key={group.familyId || '__no_family__'}
+              className={gIdx > 0 ? 'border-t-2 border-slate-200' : ''}
+            >
+              <div className="sticky top-0 z-[1] bg-slate-100/95 backdrop-blur-sm px-4 py-2.5 border-b border-slate-200/80">
+                <h2 className="font-semibold text-slate-800 text-base leading-snug">{group.familyName}</h2>
+                <p className="text-xs text-slate-500 mt-0.5 tabular-nums">
+                  {group.members.length} {group.members.length === 1 ? 'account' : 'accounts'}
+                </p>
+                {group.familyId ? (
+                  <p
+                    className="text-[11px] font-mono text-slate-400 truncate mt-1"
+                    title={group.familyId}
+                  >
+                    {group.familyId}
+                  </p>
+                ) : null}
+              </div>
+              <ul className="divide-y divide-gray-100">
+                {group.members.map((row) => (
+                  <li key={row.id}>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(row.id)}
+                      className={[
+                        'w-full text-left px-4 py-3.5 flex flex-col gap-1.5 min-h-[3.25rem] transition-colors',
+                        selectedId === row.id
+                          ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-200'
+                          : 'bg-white active:bg-gray-50',
+                        row.deleted_at ? 'opacity-70' : '',
+                      ].join(' ')}
+                    >
+                      <span className="font-medium text-gray-900">{row.name}</span>
+                      <span className="text-sm text-gray-600 break-all">{row.email}</span>
+                      <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-sm">
+                        <span className="text-gray-700 capitalize">
+                          {row.role}
+                          {row.is_admin ? (
+                            <span className="text-amber-700 font-medium"> · admin</span>
+                          ) : null}
+                        </span>
+                        <span
+                          className={
+                            row.deleted_at ? 'text-red-600 font-medium' : 'text-green-700 font-medium'
+                          }
+                        >
+                          {statusLabel(row)}
+                        </span>
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          ))}
+        </div>
+
+        <div className="hidden md:block overflow-x-auto max-h-[min(70vh,32rem)] lg:max-h-none">
+          <table className="w-full text-sm text-left min-w-[36rem]">
             <thead className="bg-gray-50 text-gray-600 sticky top-0 z-10 shadow-sm">
               <tr>
-                <th className="px-3 py-2 font-medium">Name</th>
-                <th className="px-3 py-2 font-medium">Email</th>
-                <th className="px-3 py-2 font-medium">Role</th>
-                <th className="px-3 py-2 font-medium">Status</th>
+                <th className="px-3 py-2.5 sm:py-3 font-medium">Name</th>
+                <th className="px-3 py-2.5 sm:py-3 font-medium">Email</th>
+                <th className="px-3 py-2.5 sm:py-3 font-medium">Role</th>
+                <th className="px-3 py-2.5 sm:py-3 font-medium">Status</th>
               </tr>
             </thead>
             {familyGroups.map((group, idx) => (
@@ -223,13 +283,13 @@ export default function AdminUsersPage() {
                 className={idx > 0 ? 'border-t-2 border-slate-200' : ''}
               >
                 <tr className="bg-slate-100/90">
-                  <td colSpan={4} className="px-3 py-2.5">
+                  <td colSpan={4} className="px-3 py-2.5 sm:py-3">
                     <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
                       <span className="font-semibold text-slate-800">{group.familyName}</span>
-                      <span className="text-xs text-slate-500 tabular-nums">
+                      <span className="text-xs text-slate-500 tabular-nums text-right min-w-0">
                         {group.members.length} {group.members.length === 1 ? 'account' : 'accounts'}
                         {group.familyId ? (
-                          <span className="ml-2 font-mono text-slate-400">{group.familyId}</span>
+                          <span className="ml-2 font-mono text-slate-400 break-all">{group.familyId}</span>
                         ) : null}
                       </span>
                     </div>
@@ -245,15 +305,19 @@ export default function AdminUsersPage() {
                     ].join(' ')}
                     onClick={() => setSelectedId(row.id)}
                   >
-                    <td className="px-3 py-2 pl-5 font-medium text-gray-900">{row.name}</td>
-                    <td className="px-3 py-2 text-gray-700 break-all">{row.email}</td>
-                    <td className="px-3 py-2 text-gray-700 whitespace-nowrap">
+                    <td className="px-3 py-2.5 sm:py-3 pl-4 sm:pl-5 font-medium text-gray-900 align-middle">
+                      {row.name}
+                    </td>
+                    <td className="px-3 py-2.5 sm:py-3 text-gray-700 break-all align-middle max-w-[14rem] lg:max-w-none">
+                      {row.email}
+                    </td>
+                    <td className="px-3 py-2.5 sm:py-3 text-gray-700 whitespace-nowrap align-middle">
                       {row.role}
                       {row.is_admin ? (
                         <span className="ml-1 text-xs font-medium text-amber-700">admin</span>
                       ) : null}
                     </td>
-                    <td className="px-3 py-2 whitespace-nowrap">
+                    <td className="px-3 py-2.5 sm:py-3 whitespace-nowrap align-middle">
                       <span
                         className={
                           row.deleted_at ? 'text-red-600 font-medium' : 'text-green-700 font-medium'
@@ -275,7 +339,7 @@ export default function AdminUsersPage() {
           <h2 className="text-base font-semibold text-gray-900">Edit account</h2>
         </div>
         {!selected ? (
-          <p className="p-4 text-sm text-gray-500">Select a user in the table.</p>
+          <p className="p-4 text-sm text-gray-500">Select a user from the list.</p>
         ) : (
           <form className="p-4 space-y-4" onSubmit={handleSave}>
             {formError ? (

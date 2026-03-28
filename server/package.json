@@ -5,10 +5,10 @@
   "main": "src/server.js",
   "type": "module",
   "scripts": {
-    "start": "NODE_PATH=./node_modules node src/server.js",
-    "dev": "NODE_PATH=./node_modules node src/run-migrate.js && NODE_PATH=./node_modules nodemon src/server.js",
-    "migrate": "NODE_PATH=./node_modules node src/run-migrate.js",
-    "seed": "NODE_PATH=./node_modules node src/db/seed.js"
+    "start": "node src/server.js",
+    "dev": "pnpm run migrate && pnpm exec nodemon src/server.js",
+    "migrate": "node src/run-migrate.js",
+    "seed": "node src/db/seed.js"
   },
   "dependencies": {
     "sql.js": "^1.14.0",
@@ -25,6 +25,8 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
-    "nodemon": "^3.1.7"
+    "@vitejs/plugin-react": "^4.3.4",
+    "nodemon": "^3.1.7",
+    "vite": "^6.0.1"
   }
 }

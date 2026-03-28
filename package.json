@@ -2,15 +2,18 @@
   "name": "home-work",
   "private": true,
   "scripts": {
-    "dev": "pnpm exec concurrently -n server,client -c blue,green \"pnpm run dev:server\" \"pnpm run dev:client\"",
+    "dev": "pnpm --filter home-work-server dev",
     "dev:server": "pnpm --filter home-work-server dev",
     "dev:client": "pnpm --filter home-work-client dev",
     "build:client": "pnpm --filter home-work-client build",
     "start": "pnpm --filter home-work-server start",
     "migrate": "pnpm --filter home-work-server migrate",
-    "seed": "pnpm --filter home-work-server seed"
-  },
-  "devDependencies": {
-    "concurrently": "^9.1.0"
+    "seed": "pnpm --filter home-work-server seed",
+    "pm2:start": "pnpm run migrate && pnpm run build:client && (pm2 describe home-work > /dev/null 2>&1 && pm2 reload ecosystem.config.cjs --update-env || pm2 start ecosystem.config.cjs)",
+    "pm2:stop": "pm2 stop home-work",
+    "pm2:restart": "pm2 restart home-work",
+    "pm2:reload": "pnpm run build:client && pm2 reload home-work",
+    "pm2:logs": "pm2 logs home-work",
+    "pm2:delete": "pm2 delete home-work"
   }
 }

@@ -1,3 +1,4 @@
+// Empty base = same origin as the page (single Express server on PORT for dev + production).
 const BASE = import.meta.env.VITE_API_BASE || '';
 
 export async function api(path, options = {}) {

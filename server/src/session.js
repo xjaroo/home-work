@@ -1,6 +1,8 @@
 import session from 'express-session';
 
-const isProduction = process.env.NODE_ENV === 'production';
+// One server, one port: session cookie must be sent on http:// (e.g. PM2 on :3001).
+// Use SESSION_COOKIE_SECURE=true only when users use HTTPS (reverse proxy TLS).
+const cookieSecure = process.env.SESSION_COOKIE_SECURE === 'true';
 
 const sessionConfig = {
   secret: process.env.SESSION_SECRET,
@@ -8,9 +10,9 @@ const sessionConfig = {
   saveUninitialized: false,
   cookie: {
     httpOnly: true,
-    secure: isProduction,
+    secure: cookieSecure,
     maxAge: 30 * 24 * 60 * 60 * 1000,
-    sameSite: isProduction ? 'strict' : 'lax',
+    sameSite: cookieSecure ? 'strict' : 'lax',
   },
 };
 

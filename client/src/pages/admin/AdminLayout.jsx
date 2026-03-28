@@ -39,15 +39,15 @@ export default function AdminLayout() {
           </button>
         </div>
       </header>
-      <nav className="bg-white border-b border-gray-200 px-4 py-2">
+      <nav className="bg-white border-b border-gray-200 px-3 sm:px-4 py-2">
         <Link
           to="/admin/users"
-          className="text-sm font-medium text-indigo-600 hover:text-indigo-700"
+          className="touch-target inline-flex items-center text-sm font-medium text-indigo-600 hover:text-indigo-700 rounded-app px-3 -mx-1"
         >
           Users
         </Link>
       </nav>
-      <main className="flex-1 p-4 sm:p-5 min-w-0">
+      <main className="flex-1 p-3 sm:p-5 min-w-0 safe-area-pb">
         <Routes>
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="" element={<Navigate to="users" replace />} />
