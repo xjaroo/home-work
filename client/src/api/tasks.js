@@ -10,12 +10,13 @@ export function getTask(id) {
 }
 
 export function createTask(data) {
-  return apiPost('/tasks', {
-    kidId: data.kidId,
+  const body = {
     title: data.title,
     description: data.description,
     dueDate: data.dueDate,
-  });
+  };
+  if (data.kidId) body.kidId = data.kidId;
+  return apiPost('/tasks', body);
 }
 
 export function updateTask(id, data) {

@@ -6,6 +6,7 @@ import { useSocket } from '../../contexts/SocketContext.jsx';
 
 export default function MessagesPage() {
   const { user } = useAuth();
+  const canRemoveMessages = user?.role === 'parent';
   const [members, setMembers] = useState([]);
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
@@ -15,6 +16,7 @@ export default function MessagesPage() {
   const [removingId, setRemovingId] = useState(null);
   const bottomRef = useRef(null);
   const inputRef = useRef(null);
+  const sendingRef = useRef(false);
   const socket = useSocket();
 
   useEffect(() => {
@@ -38,10 +40,14 @@ export default function MessagesPage() {
   useEffect(() => {
     if (!socket) return;
     const onNew = (msg) => {
-      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+      const id = String(msg?.id ?? '');
+      setMessages((prev) =>
+        !id || prev.some((m) => String(m.id) === id) ? prev : [...prev, msg]
+      );
     };
     const onDeleted = ({ id: messageId }) => {
-      setMessages((prev) => prev.filter((m) => m.id !== messageId));
+      const mid = String(messageId ?? '');
+      setMessages((prev) => prev.filter((m) => String(m.id) !== mid));
     };
     socket.on('parent_chat:new', onNew);
     socket.on('parent_chat:deleted', onDeleted);
@@ -125,10 +131,15 @@ export default function MessagesPage() {
 
   async function handleSend(e) {
     e.preventDefault();
-    if (!body.trim()) return;
-    const text = body.trim();
-    setBody('');
-    await sendParentChatMessage(text);
+    if (!body.trim() || sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      const text = body.trim();
+      setBody('');
+      await sendParentChatMessage(text);
+    } finally {
+      sendingRef.current = false;
+    }
   }
 
   async function handleRemove(messageId) {
@@ -165,15 +176,17 @@ export default function MessagesPage() {
                     <p className="messages-page__sender">
                       {m.sender_user_id === user?.id ? 'You' : (m.senderUserName || 'Unknown')}
                     </p>
-                    <button
-                      type="button"
-                      onClick={() => handleRemove(m.id)}
-                      disabled={removingId === m.id}
-                      className="messages-page__remove"
-                      aria-label="Remove message"
-                    >
-                      {removingId === m.id ? '…' : 'Remove'}
-                    </button>
+                    {canRemoveMessages ? (
+                      <button
+                        type="button"
+                        onClick={() => handleRemove(m.id)}
+                        disabled={removingId === m.id}
+                        className="messages-page__remove"
+                        aria-label="Remove message"
+                      >
+                        {removingId === m.id ? '…' : 'Remove'}
+                      </button>
+                    ) : null}
                   </div>
                   <p className="messages-page__text">{m.body}</p>
                   <p className="messages-page__time">
@@ -209,7 +222,7 @@ export default function MessagesPage() {
                   value={body}
                   onChange={handleInputChange}
                   onKeyDown={handleInputKeyDown}
-                  placeholder="Type a message... Use @ to mention someone"
+                  placeholder="Message everyone, or @name to mention someone"
                   className="messages-page__input"
                   aria-label="Message"
                 />

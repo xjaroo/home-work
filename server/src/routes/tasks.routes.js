@@ -4,8 +4,43 @@ import { requireAuth } from '../middleware/requireAuth.js';
 import { requireRole } from '../middleware/requireRole.js';
 import { validate } from '../middleware/validate.js';
 import * as tasksService from '../services/tasks.service.js';
+import * as users from '../db/queries/users.js';
 
 const uuidSchema = z.string().uuid();
+
+const parentCreateTaskSchema = z.object({
+  kidId: uuidSchema,
+  title: z.string().min(1).max(500),
+  description: z.string().max(2000).optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+const kidCreateTaskSchema = z.object({
+  title: z.string().min(1).max(500),
+  description: z.string().max(2000).optional(),
+  dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+});
+
+function validateTaskCreate(req, res, next) {
+  const user = req.user;
+  if (user.role === 'parent') {
+    const result = parentCreateTaskSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: 'Validation failed', details: result.error.flatten() });
+    }
+    req.valid = result.data;
+    return next();
+  }
+  if (user.role === 'kid') {
+    const result = kidCreateTaskSchema.safeParse(req.body);
+    if (!result.success) {
+      return res.status(400).json({ error: 'Validation failed', details: result.error.flatten() });
+    }
+    req.valid = result.data;
+    return next();
+  }
+  return res.status(403).json({ error: 'Forbidden' });
+}
 
 export function createTasksRouter(getIo) {
   const router = Router();
@@ -14,25 +49,39 @@ export function createTasksRouter(getIo) {
   router.post(
     '/',
     requireAuth,
-    requireRole('parent'),
-    validate(z.object({
-      kidId: uuidSchema,
-      title: z.string().min(1).max(500),
-      description: z.string().max(2000).optional(),
-      dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    })),
+    validateTaskCreate,
     (req, res, next) => {
-      const { kidId, title, description, dueDate } = req.valid;
-      const user = req.user;
-      const task = tasksService.create(io(), {
-        familyId: user.family_id,
-        kidUserId: kidId,
-        title,
-        description,
-        dueDate,
-        createdByParentId: user.id,
-      });
-      res.status(201).json(task);
+      try {
+        const user = req.user;
+        if (user.role === 'parent') {
+          const { kidId, title, description, dueDate } = req.valid;
+          const kid = users.getById(kidId);
+          if (!kid || kid.family_id !== user.family_id || kid.role !== 'kid') {
+            return res.status(404).json({ error: 'Kid not found' });
+          }
+          const task = tasksService.create(io(), {
+            familyId: user.family_id,
+            kidUserId: kidId,
+            title,
+            description,
+            dueDate,
+            createdByParentId: user.id,
+          });
+          return res.status(201).json(tasksService.getById(task.id));
+        }
+        const { title, description, dueDate } = req.valid;
+        const task = tasksService.create(io(), {
+          familyId: user.family_id,
+          kidUserId: user.id,
+          title,
+          description,
+          dueDate,
+          createdByParentId: null,
+        });
+        return res.status(201).json(tasksService.getById(task.id));
+      } catch (e) {
+        return next(e);
+      }
     }
   );
 

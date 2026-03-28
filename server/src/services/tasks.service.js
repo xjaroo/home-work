@@ -21,7 +21,7 @@ export function create(io, { familyId, kidUserId, title, description, dueDate, c
     description: description || null,
     due_date: dueDate,
     status: 'todo',
-    created_by_parent_id: createdByParentId,
+    created_by_parent_id: createdByParentId ?? null,
   });
   if (io) {
     io.to(`family:${familyId}`).emit('task:created', task);

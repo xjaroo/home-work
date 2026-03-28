@@ -7,13 +7,20 @@ import * as parentChatService from '../services/parentChat.service.js';
 
 const router = Router();
 
+function requireFamilyChatParticipant(req, res, next) {
+  if (req.user.role !== 'parent' && req.user.role !== 'kid') {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
+  next();
+}
+
 export function createParentChatRouter(getIo) {
   const io = () => getIo ? getIo() : null;
 
   router.get(
     '/',
     requireAuth,
-    requireRole('parent'),
+    requireFamilyChatParticipant,
     (req, res, next) => {
       try {
         const list = parentChatService.list(req.user.family_id);
@@ -27,7 +34,7 @@ export function createParentChatRouter(getIo) {
   router.post(
     '/',
     requireAuth,
-    requireRole('parent'),
+    requireFamilyChatParticipant,
     validate(z.object({ body: z.string().min(1).max(5000) })),
     (req, res, next) => {
       try {

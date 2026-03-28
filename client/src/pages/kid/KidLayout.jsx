@@ -1,13 +1,15 @@
 import React from 'react';
-import { Routes, Route, Navigate, Link, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext.jsx';
 import KidTasks from './KidTasks.jsx';
 import KidBalance from './KidBalance.jsx';
-import KidMessages from './KidMessages.jsx';
+import MessagesPage from '../parent/MessagesPage.jsx';
 
 export default function KidLayout() {
   const { user, family, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isMessages = location.pathname === '/kid/messages';
   const familyName = family?.name || 'Home Work';
 
   function handleLogout() {
@@ -16,7 +18,12 @@ export default function KidLayout() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col min-w-0 overflow-x-hidden pb-20 sm:pb-24">
+    <div
+      className={[
+        'min-h-screen bg-gray-50 flex flex-col min-w-0 overflow-x-hidden',
+        isMessages ? '' : 'pb-20 sm:pb-24',
+      ].join(' ')}
+    >
       <header className="bg-white border-b border-gray-200 px-[max(1rem,env(safe-area-inset-left))] pr-[max(1rem,env(safe-area-inset-right))] py-3 flex justify-between items-center gap-2 flex-wrap sm:flex-nowrap">
         <Link
           to="/kid"
@@ -35,15 +42,27 @@ export default function KidLayout() {
           </button>
         </div>
       </header>
-      <main className="p-4 sm:p-5 flex-1">
+      <main
+        className={
+          isMessages
+            ? 'flex-1 flex flex-col min-h-0 min-w-0 p-0'
+            : 'p-4 sm:p-5 flex-1 min-w-0'
+        }
+      >
         <Routes>
           <Route index element={<KidTasks />} />
           <Route path="balance" element={<KidBalance />} />
-          <Route path="messages" element={<KidMessages />} />
+          <Route path="messages" element={<MessagesPage />} />
           <Route path="*" element={<Navigate to="/kid" replace />} />
         </Routes>
       </main>
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around safe-area-pb z-10">
+      <nav
+        className={[
+          'fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 flex justify-around safe-area-pb z-10',
+          isMessages ? 'hidden' : '',
+        ].join(' ')}
+        aria-hidden={isMessages}
+      >
         <Link to="/kid" className="touch-target flex flex-1 flex-col items-center justify-center py-3 text-gray-600 hover:text-indigo-600 active:bg-gray-50 text-sm font-medium min-h-[3rem]">
           <span>Tasks</span>
         </Link>

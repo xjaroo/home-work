@@ -376,20 +376,25 @@ export default function KidDetail() {
 
       {activeTab === 'tasks' && (
         <section className="space-y-4">
-          <div className="flex flex-wrap gap-2 items-center justify-between">
-            <Link to={`/parent/tasks/new?kidId=${kidId}`} className="rounded bg-indigo-600 px-3 py-2 text-white text-sm font-medium">New task</Link>
-            <div className="flex flex-wrap gap-2 items-center">
+          <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
+            <Link
+              to={`/parent/tasks/new?kidId=${kidId}`}
+              className="btn-app-primary text-sm w-full sm:w-auto text-center justify-center"
+            >
+              New task
+            </Link>
+            <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center w-full sm:w-auto min-w-0">
               <input
                 type="search"
                 placeholder="Search tasks…"
                 value={taskSearch}
                 onChange={(e) => setTaskSearch(e.target.value)}
-                className="rounded border border-gray-300 px-2 py-1.5 text-sm w-40"
+                className="rounded-app border border-gray-300 px-3 py-2.5 text-base sm:text-sm w-full sm:w-40 min-h-[2.75rem] touch-target"
               />
               <select
                 value={taskStatusFilter}
                 onChange={(e) => setTaskStatusFilter(e.target.value)}
-                className="rounded border border-gray-300 px-2 py-1.5 text-sm"
+                className="rounded-app border border-gray-300 px-3 py-2.5 text-base sm:text-sm w-full sm:w-auto min-h-[2.75rem] touch-target"
               >
                 <option value="all">All statuses</option>
                 <option value="todo">To do</option>
@@ -401,7 +406,7 @@ export default function KidDetail() {
           </div>
           <ul className="space-y-2">
             {paginatedTasks.map((t) => (
-              <li key={t.id} className="p-3 bg-white rounded border border-gray-200">
+              <li key={t.id} className="p-3 sm:p-4 bg-white rounded-app border border-gray-200 min-w-0">
                 {editingTaskId === t.id ? (
                   <form onSubmit={handleSaveTask} className="space-y-2">
                     <label className="block">
@@ -434,20 +439,29 @@ export default function KidDetail() {
                     </div>
                   </form>
                 ) : (
-                  <div className="flex justify-between items-start flex-wrap gap-2">
-                    <div className="min-w-0 flex-1">
-                      <span className="font-medium">{t.title}</span>
-                      <span className="ml-2 text-sm text-gray-500">Due: {t.due_date}</span>
-                      {t.createdByParentName && <span className="ml-2 text-sm text-gray-400">By {t.createdByParentName}</span>}
+                  <div className="flex flex-col gap-3 sm:flex-row sm:justify-between sm:items-start sm:gap-4 min-w-0">
+                    <div className="min-w-0 w-full sm:flex-1 space-y-1">
+                      <p className="font-medium text-gray-900 break-words">{t.title}</p>
+                      <div className="flex flex-col gap-0.5 text-sm text-gray-500 sm:flex-row sm:flex-wrap sm:items-center sm:gap-x-2 sm:gap-y-0">
+                        <span>Due: {t.due_date}</span>
+                        {t.createdByParentName && (
+                          <>
+                            <span className="hidden sm:inline text-gray-300 select-none" aria-hidden>
+                              ·
+                            </span>
+                            <span className="text-gray-400">By {t.createdByParentName}</span>
+                          </>
+                        )}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap items-center gap-2 shrink-0">
-                      <label className="flex items-center gap-1.5 text-sm text-gray-600">
-                        <span className="whitespace-nowrap">Status</span>
+                    <div className="flex flex-col gap-3 w-full sm:w-auto sm:max-w-full sm:shrink-0 min-w-0">
+                      <label className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2 text-sm text-gray-600">
+                        <span className="shrink-0 sm:pt-0.5">Status</span>
                         <select
                           value={PARENT_EDITABLE_TASK_STATUSES.some((o) => o.value === t.status) ? t.status : 'todo'}
                           onChange={(e) => handleStatusChange(t.id, e.target.value)}
                           disabled={updatingStatusTaskId === t.id}
-                          className="rounded border border-gray-300 px-2 py-1.5 text-gray-900 text-sm min-w-[9rem] disabled:opacity-50"
+                          className="w-full sm:w-auto sm:min-w-[9rem] rounded-app border border-gray-300 px-3 py-2.5 text-base sm:text-sm text-gray-900 min-h-[2.75rem] touch-target disabled:opacity-50"
                           aria-label={`Status for ${t.title}`}
                         >
                           {PARENT_EDITABLE_TASK_STATUSES.map((opt) => (
@@ -455,19 +469,50 @@ export default function KidDetail() {
                           ))}
                         </select>
                       </label>
-                    <div className="flex flex-wrap gap-2">
-                      <button type="button" onClick={() => handleStartEditTask(t)} className="rounded border border-gray-300 px-2 py-1 text-gray-700 text-sm hover:bg-gray-50">Edit</button>
-                      <button type="button" onClick={() => handleDeleteTask(t)} disabled={deletingTaskId === t.id} className="rounded border border-red-300 px-2 py-1 text-red-600 text-sm hover:bg-red-50 disabled:opacity-50">{deletingTaskId === t.id ? 'Deleting…' : 'Delete'}</button>
-                      {t.status === 'done' && (
-                        <>
-                          <button type="button" onClick={() => handleStatusChange(t.id, 'approved')} className="rounded bg-green-600 px-2 py-1 text-white text-sm">Approve</button>
-                          <button type="button" onClick={() => handleArchive(t.id)} className="rounded bg-gray-500 px-2 py-1 text-white text-sm">Archive</button>
-                        </>
-                      )}
-                      {t.status === 'approved' && (
-                        <button type="button" onClick={() => handleArchive(t.id)} className="rounded bg-gray-500 px-2 py-1 text-white text-sm">Archive</button>
-                      )}
-                    </div>
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditTask(t)}
+                          className="touch-target inline-flex items-center justify-center rounded-app border border-gray-300 px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 min-h-[2.75rem]"
+                        >
+                          Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteTask(t)}
+                          disabled={deletingTaskId === t.id}
+                          className="touch-target inline-flex items-center justify-center rounded-app border border-red-300 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 disabled:opacity-50 min-h-[2.75rem]"
+                        >
+                          {deletingTaskId === t.id ? 'Deleting…' : 'Delete'}
+                        </button>
+                        {t.status === 'done' && (
+                          <>
+                            <button
+                              type="button"
+                              onClick={() => handleStatusChange(t.id, 'approved')}
+                              className="touch-target inline-flex items-center justify-center rounded-app bg-green-600 px-3 py-2 text-sm font-medium text-white hover:bg-green-700 min-h-[2.75rem]"
+                            >
+                              Approve
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleArchive(t.id)}
+                              className="touch-target inline-flex items-center justify-center rounded-app bg-gray-500 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 min-h-[2.75rem]"
+                            >
+                              Archive
+                            </button>
+                          </>
+                        )}
+                        {t.status === 'approved' && (
+                          <button
+                            type="button"
+                            onClick={() => handleArchive(t.id)}
+                            className="touch-target inline-flex items-center justify-center rounded-app bg-gray-500 px-3 py-2 text-sm font-medium text-white hover:bg-gray-600 min-h-[2.75rem]"
+                          >
+                            Archive
+                          </button>
+                        )}
+                      </div>
                     </div>
                   </div>
                 )}

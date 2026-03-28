@@ -12,7 +12,7 @@ export function create(row) {
       row.description ?? null,
       row.due_date,
       row.status ?? 'todo',
-      row.created_by_parent_id,
+      row.created_by_parent_id ?? null,
     ]
   );
   return getById(row.id);

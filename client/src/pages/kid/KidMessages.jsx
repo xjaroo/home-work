@@ -3,12 +3,19 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import { listMessages, sendMessage } from '../../api/messages.js';
 import { useSocket } from '../../contexts/SocketContext.jsx';
 
+function mergeKidThreadMessage(prev, msg) {
+  const id = String(msg?.id ?? '');
+  if (!id || prev.some((m) => String(m.id) === id)) return prev;
+  return [...prev, msg];
+}
+
 export default function KidMessages() {
   const { user } = useAuth();
   const [messages, setMessages] = useState([]);
   const [body, setBody] = useState('');
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef(null);
+  const sendingRef = useRef(false);
   const socket = useSocket();
   const kidId = user?.id;
 
@@ -28,7 +35,7 @@ export default function KidMessages() {
     if (!socket || !kidId) return;
     const onNew = (msg) => {
       if (msg.kid_user_id === kidId) {
-        setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+        setMessages((prev) => mergeKidThreadMessage(prev, msg));
       }
     };
     socket.on('message:new', onNew);
@@ -37,10 +44,16 @@ export default function KidMessages() {
 
   async function handleSend(e) {
     e.preventDefault();
-    if (!body.trim() || !kidId) return;
-    const msg = await sendMessage(kidId, body.trim());
-    setMessages((prev) => [...prev, msg]);
-    setBody('');
+    if (!body.trim() || !kidId || sendingRef.current) return;
+    sendingRef.current = true;
+    try {
+      const text = body.trim();
+      const msg = await sendMessage(kidId, text);
+      setMessages((prev) => mergeKidThreadMessage(prev, msg));
+      setBody('');
+    } finally {
+      sendingRef.current = false;
+    }
   }
 
   if (loading) return <p className="text-gray-500 text-base">Loading...</p>;
