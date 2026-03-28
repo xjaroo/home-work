@@ -102,11 +102,26 @@ export default function ParentDashboard() {
               className="card-app block p-5 hover:border-indigo-300 hover:shadow-md transition-shadow"
             >
               <h3 className="font-semibold text-gray-900 text-base">{kid.name}</h3>
-              <ul className="mt-3 text-sm text-gray-600 space-y-1.5">
-                <li>Due today: {dueToday}</li>
-                <li>Overdue: {overdue}</li>
-                <li>Completion: {completionRate}%</li>
-                <li>Balance: ${(balanceCents / 100).toFixed(2)}</li>
+              <ul className="parent-kid-card__stats">
+                <li
+                  className={`parent-kid-card__stat${dueToday > 0 ? ' parent-kid-card__stat--active' : ''}`}
+                >
+                  Due today: {dueToday}
+                </li>
+                <li
+                  className={`parent-kid-card__stat${overdue > 0 ? ' parent-kid-card__stat--warn' : ''}`}
+                >
+                  Overdue: {overdue}
+                </li>
+                <li className="parent-kid-card__stat parent-kid-card__stat--muted">
+                  Completion: {completionRate}%
+                </li>
+                <li className="parent-kid-card__stat parent-kid-card__stat--balance">
+                  Balance:{' '}
+                  <span className="parent-kid-card__stat-amount">
+                    ${(balanceCents / 100).toFixed(2)}
+                  </span>
+                </li>
               </ul>
             </Link>
           );

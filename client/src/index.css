@@ -245,3 +245,47 @@ body {
 .messages-page__send:hover {
   background: #4338ca;
 }
+
+/* Parent dashboard: kid cards — hierarchy for task stats + highlighted balance */
+.parent-kid-card__stats {
+  margin-top: 0.75rem;
+  padding: 0;
+  list-style: none;
+  font-size: 0.875rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.parent-kid-card__stat {
+  color: #6b7280;
+}
+
+.parent-kid-card__stat--muted {
+  color: #9ca3af;
+}
+
+.parent-kid-card__stat--active {
+  font-weight: 500;
+  color: #4338ca;
+}
+
+.parent-kid-card__stat--warn {
+  font-weight: 500;
+  color: #b45309;
+}
+
+.parent-kid-card__stat--balance {
+  margin-top: 0.125rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 0.5rem;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  color: #312e81;
+  font-weight: 600;
+  border: 1px solid #c7d2fe;
+  letter-spacing: -0.01em;
+}
+
+.parent-kid-card__stat-amount {
+  font-variant-numeric: tabular-nums;
+}
