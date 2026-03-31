@@ -4,6 +4,8 @@ import { useAuth } from '../../contexts/AuthContext.jsx';
 import {
   fetchAdminUsers,
   fetchAdminFamilies,
+  createAdminFamily,
+  createAdminParentInvite,
   patchAdminUser,
   deactivateAdminUser,
   reactivateAdminUser,
@@ -62,6 +64,15 @@ export default function AdminUsersPage() {
   const [saving, setSaving] = useState(false);
   const [openingKidTest, setOpeningKidTest] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [newFamilyName, setNewFamilyName] = useState('');
+  const [creatingFamily, setCreatingFamily] = useState(false);
+  const [createFamilyError, setCreateFamilyError] = useState('');
+  const [parentInviteFamilyId, setParentInviteFamilyId] = useState('');
+  const [parentInviteEmail, setParentInviteEmail] = useState('');
+  const [creatingParentInvite, setCreatingParentInvite] = useState(false);
+  const [parentInviteError, setParentInviteError] = useState('');
+  const [latestOnboardingLink, setLatestOnboardingLink] = useState('');
+  const [latestOnboardingEmail, setLatestOnboardingEmail] = useState('');
 
   const selected = rows.find((r) => r.id === selectedId) || null;
 
@@ -110,6 +121,17 @@ export default function AdminUsersPage() {
     setNewPassword('');
     setFormError('');
   }, [selected?.id]);
+
+  useEffect(() => {
+    if (!families.length) {
+      setParentInviteFamilyId('');
+      return;
+    }
+    setParentInviteFamilyId((prev) => {
+      if (prev && families.some((f) => f.id === prev)) return prev;
+      return families[0].id;
+    });
+  }, [families]);
 
   async function handleSave(e) {
     e.preventDefault();
@@ -199,6 +221,50 @@ export default function AdminUsersPage() {
       setSelectedId(null);
     } catch (err) {
       setFormError(err.message || 'Delete failed');
+    }
+  }
+
+  async function handleCreateFamily(e) {
+    e.preventDefault();
+    setCreateFamilyError('');
+    setCreatingFamily(true);
+    try {
+      await createAdminFamily(newFamilyName.trim());
+      setNewFamilyName('');
+      await reload();
+    } catch (err) {
+      setCreateFamilyError(err.message || 'Could not create family');
+    } finally {
+      setCreatingFamily(false);
+    }
+  }
+
+  async function handleCreateParentInvite(e) {
+    e.preventDefault();
+    setParentInviteError('');
+    setCreatingParentInvite(true);
+    try {
+      const result = await createAdminParentInvite({
+        family_id: parentInviteFamilyId,
+        email: parentInviteEmail.trim(),
+      });
+      setLatestOnboardingLink(result.onboardingUrl || '');
+      setLatestOnboardingEmail(result.email || parentInviteEmail.trim());
+      setParentInviteEmail('');
+      await reload();
+    } catch (err) {
+      setParentInviteError(err.message || 'Could not create onboarding link');
+    } finally {
+      setCreatingParentInvite(false);
+    }
+  }
+
+  async function handleCopyOnboardingLink() {
+    if (!latestOnboardingLink) return;
+    try {
+      await navigator.clipboard.writeText(latestOnboardingLink);
+    } catch {
+      setParentInviteError('Could not copy the link. Please copy it manually.');
     }
   }
 
@@ -354,6 +420,85 @@ export default function AdminUsersPage() {
       </div>
 
       <div className="card-app w-full lg:w-[22rem] xl:w-[26rem] shrink-0">
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">Add family</h2>
+        </div>
+        <form className="p-4 space-y-3 border-b border-gray-200" onSubmit={handleCreateFamily}>
+          {createFamilyError ? (
+            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-app" role="alert">
+              {createFamilyError}
+            </p>
+          ) : null}
+          <label className="block">
+            <span className="text-gray-700 text-sm font-medium">Family name</span>
+            <input
+              className="input-app mt-1"
+              value={newFamilyName}
+              onChange={(e) => setNewFamilyName(e.target.value)}
+              placeholder="e.g. Kim Family"
+              required
+            />
+          </label>
+          <button type="submit" disabled={creatingFamily} className="btn-app-primary w-full">
+            {creatingFamily ? 'Creating…' : 'Create family'}
+          </button>
+        </form>
+
+        <div className="px-4 py-3 border-b border-gray-200">
+          <h2 className="text-base font-semibold text-gray-900">Add parent</h2>
+        </div>
+        <form className="p-4 space-y-3 border-b border-gray-200" onSubmit={handleCreateParentInvite}>
+          {parentInviteError ? (
+            <p className="text-sm text-red-600 bg-red-50 p-3 rounded-app" role="alert">
+              {parentInviteError}
+            </p>
+          ) : null}
+          <label className="block">
+            <span className="text-gray-700 text-sm font-medium">Family</span>
+            <select
+              className="input-app mt-1"
+              value={parentInviteFamilyId}
+              onChange={(e) => setParentInviteFamilyId(e.target.value)}
+              required
+            >
+              {families.map((f) => (
+                <option key={f.id} value={f.id}>
+                  {f.name || f.id}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="block">
+            <span className="text-gray-700 text-sm font-medium">Parent email</span>
+            <input
+              type="email"
+              className="input-app mt-1"
+              value={parentInviteEmail}
+              onChange={(e) => setParentInviteEmail(e.target.value)}
+              placeholder="parent@example.com"
+              required
+            />
+          </label>
+          <button type="submit" disabled={creatingParentInvite} className="btn-app-primary w-full">
+            {creatingParentInvite ? 'Generating…' : 'Generate onboarding link'}
+          </button>
+          {latestOnboardingLink ? (
+            <div className="rounded-app border border-green-200 bg-green-50 p-3">
+              <p className="text-xs text-green-800 mb-2">Share this onboarding URL with {latestOnboardingEmail}:</p>
+              <div className="flex gap-2">
+                <input type="text" className="input-app bg-white" value={latestOnboardingLink} readOnly />
+                <button
+                  type="button"
+                  className="btn-app border border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                  onClick={handleCopyOnboardingLink}
+                >
+                  Copy
+                </button>
+              </div>
+            </div>
+          ) : null}
+        </form>
+
         <div className="px-4 py-3 border-b border-gray-200">
           <h2 className="text-base font-semibold text-gray-900">Edit account</h2>
         </div>

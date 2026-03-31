@@ -34,6 +34,15 @@ const patchUserSchema = z
     { message: 'At least one field to update is required' }
   );
 
+const createFamilySchema = z.object({
+  name: z.string().min(1).max(200),
+});
+
+const createParentInviteSchema = z.object({
+  family_id: uuidSchema,
+  email: z.string().email(),
+});
+
 const router = Router();
 
 router.use(requireAuth, requireAdmin);
@@ -44,6 +53,29 @@ router.get('/users', (_req, res) => {
 
 router.get('/families', (_req, res) => {
   res.json(adminService.listFamilies());
+});
+
+router.post('/families', validate(createFamilySchema), (req, res, next) => {
+  try {
+    const family = adminService.createFamily(req.valid.name);
+    res.status(201).json(family);
+  } catch (e) {
+    next(e);
+  }
+});
+
+router.post('/parent-invites', validate(createParentInviteSchema), (req, res, next) => {
+  try {
+    const invite = adminService.createParentOnboardingInvite(req.user.id, req.valid);
+    const baseUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+    const onboardingUrl = `${baseUrl}/invite/accept?token=${invite.token}`;
+    res.status(201).json({
+      ...invite,
+      onboardingUrl,
+    });
+  } catch (e) {
+    next(e);
+  }
 });
 
 router.get('/users/:userId', validate(z.object({ userId: uuidSchema })), (req, res) => {

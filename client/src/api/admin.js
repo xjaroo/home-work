@@ -8,6 +8,14 @@ export function fetchAdminFamilies() {
   return apiGet('/admin/families');
 }
 
+export function createAdminFamily(name) {
+  return apiPost('/admin/families', { name });
+}
+
+export function createAdminParentInvite(body) {
+  return apiPost('/admin/parent-invites', body);
+}
+
 export function patchAdminUser(userId, body) {
   return apiPatch(`/admin/users/${userId}`, body);
 }

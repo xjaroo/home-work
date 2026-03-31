@@ -1,6 +1,8 @@
 import { hashSync } from '../lib/bcrypt.js';
+import { v4 as uuidv4 } from 'uuid';
 import * as users from '../db/queries/users.js';
 import * as families from '../db/queries/families.js';
+import * as inviteService from './invite.service.js';
 import { permanentDeleteUserRecords } from '../db/queries/userPurge.js';
 
 const PASSWORD_MIN = 8;
@@ -12,6 +14,36 @@ export function listUsers() {
 
 export function listFamilies() {
   return families.listAll();
+}
+
+export function createFamily(name) {
+  const familyName = String(name || '').trim();
+  if (!familyName) {
+    const err = new Error('Family name is required');
+    err.status = 400;
+    throw err;
+  }
+  return families.create(uuidv4(), familyName);
+}
+
+export function createParentOnboardingInvite(actorId, { family_id, email }) {
+  const family = families.getById(family_id);
+  if (!family) {
+    const err = new Error('Family not found');
+    err.status = 404;
+    throw err;
+  }
+  const invite = inviteService.createInvite({
+    familyId: family_id,
+    email,
+    invitedByUserId: actorId,
+  });
+  return {
+    family,
+    email: invite.email,
+    token: invite.token,
+    reused: invite.reused ?? false,
+  };
 }
 
 export function getUserRecord(userId) {
