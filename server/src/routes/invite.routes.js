@@ -5,6 +5,7 @@ import { requireRole } from '../middleware/requireRole.js';
 import { validate } from '../middleware/validate.js';
 import * as inviteService from '../services/invite.service.js';
 import * as families from '../db/queries/families.js';
+import { frontendBaseUrl } from '../lib/frontendBaseUrl.js';
 
 const router = Router();
 const PASSWORD_MIN = 8;
@@ -21,7 +22,7 @@ router.post(
         email: req.valid.email,
         invitedByUserId: req.user.id,
       });
-      const baseUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+      const baseUrl = frontendBaseUrl();
       const inviteLink = `${baseUrl}/invite/accept?token=${invite.token}`;
       res.status(201).json({ token: invite.token, inviteLink, reused: invite.reused ?? false, email: invite.email });
     } catch (e) {

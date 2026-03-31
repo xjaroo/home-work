@@ -4,6 +4,7 @@ import { requireAuth } from '../middleware/requireAuth.js';
 import { requireAdmin } from '../middleware/requireAdmin.js';
 import { validate } from '../middleware/validate.js';
 import * as adminService from '../services/admin.service.js';
+import { frontendBaseUrl } from '../lib/frontendBaseUrl.js';
 
 const uuidSchema = z.string().uuid();
 
@@ -67,7 +68,7 @@ router.post('/families', validate(createFamilySchema), (req, res, next) => {
 router.post('/parent-invites', validate(createParentInviteSchema), (req, res, next) => {
   try {
     const invite = adminService.createParentOnboardingInvite(req.user.id, req.valid);
-    const baseUrl = process.env.FRONTEND_ORIGIN || 'http://localhost:5173';
+    const baseUrl = frontendBaseUrl();
     const onboardingUrl = `${baseUrl}/invite/accept?token=${invite.token}`;
     res.status(201).json({
       ...invite,
