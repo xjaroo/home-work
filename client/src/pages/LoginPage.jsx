@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext.jsx';
 
 export default function LoginPage() {
@@ -78,9 +78,6 @@ export default function LoginPage() {
             Log in
           </button>
         </form>
-        <p className="mt-6 text-center text-sm text-gray-600">
-          No account? <Link to="/register" className="font-medium text-indigo-600 hover:text-indigo-700">Register as parent</Link>
-        </p>
       </div>
     </div>
   );
